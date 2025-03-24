@@ -87,7 +87,7 @@
         }
 
         .signature-img {
-            max-width: 100%;
+            max-width: 16px; /* 设置为汉字大小 */
             height: auto;
             cursor: pointer;
         }
@@ -147,7 +147,7 @@
     <div class="container">
         <div class="header">
             <span class="back-button">&lt;</span>
-            <span class="menu-button">...</span>
+            <span class="menu-button" onclick="toggleMenu()">...</span>
         </div>
         <div class="profile-header">
             <img src="https://via.placeholder.com/80x80" alt="头像" class="avatar" onclick="changeAvatar()">
@@ -168,6 +168,11 @@
 
     <div class="modal" id="modal" onclick="closeModal()">
         <img id="modal-img">
+    </div>
+
+    <!-- 隐藏的上传图片按钮 -->
+    <div id="menu" style="display: none; position: fixed; top: 20px; right: 20px;">
+        <input type="file" accept="image/*" onchange="uploadImage(event)">
     </div>
 
     <script>
@@ -216,6 +221,9 @@
                 img.classList.add('signature-img');
                 img.onclick = function() { openModal(img); };
                 document.querySelector('.signature-box').appendChild(img);
+                
+                // 隐藏上传链接到右上角
+                document.getElementById('menu').style.display = 'none';
             };
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -259,6 +267,15 @@
 
         function closeModal() {
             document.getElementById("modal").style.display = "none";
+        }
+
+        function toggleMenu() {
+            let menu = document.getElementById('menu');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
         }
     </script>
 </body>
