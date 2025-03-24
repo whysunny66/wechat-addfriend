@@ -43,7 +43,7 @@
 
         .profile-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start; /* 修改为 flex-start */
             padding: 20px;
             border-bottom: 1px solid #e5e5e5;
         }
@@ -61,6 +61,7 @@
             font-size: 18px;
             margin: 0;
             cursor: pointer;
+            line-height: 80px; /* 增加行高，使昵称垂直居中与头像平行 */
         }
 
         .info-item {
