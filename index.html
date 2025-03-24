@@ -134,6 +134,11 @@
         .input-box input[type="file"] {
             margin-bottom: 10px;
         }
+
+        .input-box textarea {
+            margin-bottom: 10px;
+            resize: none;
+        }
     </style>
 </head>
 <body>
@@ -164,6 +169,8 @@
     </div>
 
     <script>
+        let scale = 1;
+
         function changeAvatar() {
             let newAvatar = prompt("请输入头像图片URL:");
             if (newAvatar) {
@@ -212,10 +219,14 @@
             modalImg.src = img.src;
             modal.style.display = "flex";
 
-            modalImg.onclick = function(e) {
-                let scale = 1;
-                scale += 0.1;  // 每次点击图片放大
+            modalImg.onclick = function() {
+                // 放大图片
+                scale += 0.1;
                 modalImg.style.transform = "scale(" + scale + ")";
+                if (scale > 3) {
+                    scale = 1; // 重置缩放
+                    modalImg.style.transform = "scale(1)"; // 恢复到原始大小
+                }
             };
         }
 
