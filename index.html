@@ -1,29 +1,34 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>微信加好友申请</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信加好友</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>微信加好友申请</h1>
-    <div class="friend-request">
-      <img class="avatar" src="https://via.placeholder.com/100" alt="头像">
-      <div class="info">
-        <p>微信号：<span class="wechat-id">weChat123</span></p>
-        <p>个性签名：<span id="signature" class="signature">点击放大</span></p>
-        <input type="text" id="signatureInput" placeholder="自定义个性签名">
-        <button id="updateSignature">更新签名</button>
-      </div>
+    <div class="container">
+        <header>
+            <span class="back">&#x2190;</span>
+            <h1>好友资料</h1>
+            <span class="menu">&#x22EE;</span>
+        </header>
+        <div class="profile">
+            <img class="avatar" src="avatar.jpg" alt="头像">
+            <h2>Fairy</h2>
+        </div>
+        <div class="info">
+            <p>来源 <span class="source">来自扫一扫</span></p>
+            <p>个性签名：</p>
+            <div id="signature" class="signature" onclick="expandSignature()">
+                <img id="signatureImage" src="signature.jpg" alt="个性签名">
+            </div>
+        </div>
+        <button class="add-btn">添加到通讯录</button>
+        <div id="qrCode"></div>
     </div>
-    <div id="qrCode"></div>
-  </div>
-
-  <!-- 引入脚本 -->
-  <script src="script.js"></script>
-  <!-- 引入二维码生成库 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
+
