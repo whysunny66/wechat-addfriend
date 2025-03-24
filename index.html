@@ -43,7 +43,7 @@
 
         .profile-header {
             display: flex;
-            align-items: flex-start; /* 修改为 flex-start */
+            align-items: flex-start; /* 修改为 flex-start，使头像和昵称向上对齐 */
             padding: 20px;
             border-bottom: 1px solid #e5e5e5;
         }
@@ -102,11 +102,14 @@
             background: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
         .modal img {
             max-width: 90%;
             max-height: 90%;
+            cursor: pointer;
+            transition: transform 0.3s ease;
         }
 
         .add-button {
@@ -120,6 +123,16 @@
             cursor: pointer;
             border-top: 8px solid #f0f0f0;
             text-align: center;
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            margin-top: 10px;
+        }
+
+        .input-box input[type="file"] {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -145,9 +158,11 @@
         </div>
         <button class="add-button" onclick="alert('好友请求已发送')">添加到通讯录</button>
     </div>
+
     <div class="modal" id="modal" onclick="closeModal()">
         <img id="modal-img">
     </div>
+
     <script>
         function changeAvatar() {
             let newAvatar = prompt("请输入头像图片URL:");
@@ -168,11 +183,40 @@
             if (newSignature) {
                 document.getElementById("signature-text").textContent = newSignature;
             }
+
+            // 显示输入框让用户上传图片
+            let inputBox = document.createElement('div');
+            inputBox.classList.add('input-box');
+            inputBox.innerHTML = `
+                <input type="file" accept="image/*" onchange="uploadImage(event)">
+                <textarea id="signature-textarea" placeholder="在这里输入个性签名..."></textarea>
+            `;
+            document.querySelector('.signature-box').appendChild(inputBox);
+        }
+
+        function uploadImage(event) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let img = document.createElement('img');
+                img.src = e.target.result;
+                img.classList.add('signature-img');
+                img.onclick = function() { openModal(img); };
+                document.querySelector('.signature-box').appendChild(img);
+            };
+            reader.readAsDataURL(event.target.files[0]);
         }
 
         function openModal(img) {
-            document.getElementById("modal-img").src = img.src;
-            document.getElementById("modal").style.display = "flex";
+            let modal = document.getElementById("modal");
+            let modalImg = document.getElementById("modal-img");
+            modalImg.src = img.src;
+            modal.style.display = "flex";
+
+            modalImg.onclick = function(e) {
+                let scale = 1;
+                scale += 0.1;  // 每次点击图片放大
+                modalImg.style.transform = "scale(" + scale + ")";
+            };
         }
 
         function closeModal() {
