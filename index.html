@@ -23,7 +23,6 @@
             position: relative;
         }
 
-        /* 头部区域 */
         .header {
             display: flex;
             justify-content: space-between;
@@ -91,17 +90,19 @@
         .signature-box {
             min-height: 44px;
             padding: 12px 20px;
+            border-top: 8px solid #f0f0f0;
         }
 
         .add-button {
             display: block;
             width: 100%;
             padding: 12px;
-            background: #07c160;
-            color: white;
+            background: white;
+            color: blue;
             border: none;
             font-size: 16px;
             cursor: pointer;
+            border-top: 8px solid #f0f0f0;
         }
 
         .modal {
@@ -143,7 +144,6 @@
         <button class="add-button" onclick="alert('好友请求已发送')">添加到通讯录</button>
     </div>
 
-    <!-- 编辑弹窗 -->
     <div class="modal" id="editModal">
         <h3 id="modalTitle">编辑内容</h3>
         <input type="text" id="editInput" style="width: 100%; padding: 8px;">
