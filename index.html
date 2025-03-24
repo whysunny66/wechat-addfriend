@@ -195,22 +195,22 @@
         }
 
         function editSignature() {
+            // 如果已经设置过个性签名，就不再执行
+            if (document.querySelector('.input-box')) return;
+
             let newSignature = prompt("请输入新的个性签名:");
             if (newSignature) {
                 document.getElementById("signature-text").textContent = newSignature;
             }
 
             // 显示上传按钮
-            let inputBox = document.querySelector('.input-box');
-            if (!inputBox) {
-                inputBox = document.createElement('div');
-                inputBox.classList.add('input-box');
-                inputBox.innerHTML = `
-                    <input type="file" accept="image/*" onchange="uploadImage(event)">
-                    <textarea id="signature-textarea" placeholder="在这里输入个性签名..."></textarea>
-                `;
-                document.querySelector('.signature-box').appendChild(inputBox);
-            }
+            let inputBox = document.createElement('div');
+            inputBox.classList.add('input-box');
+            inputBox.innerHTML = `
+                <input type="file" accept="image/*" onchange="uploadImage(event)">
+                <textarea id="signature-textarea" placeholder="在这里输入个性签名..."></textarea>
+            `;
+            document.querySelector('.signature-box').appendChild(inputBox);
         }
 
         function uploadImage(event) {
