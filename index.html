@@ -20,6 +20,42 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* 头部区域 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            font-size: 20px;
+        }
+
+        .back-button {
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .menu-button {
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .menu-options {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .menu-options div {
+            padding: 8px;
+            cursor: pointer;
         }
 
         .profile-header {
@@ -29,33 +65,16 @@
             border-bottom: 1px solid #e5e5e5;
         }
 
-        .avatar-edit {
-            position: relative;
-            display: inline-block;
-        }
-
         .avatar {
             width: 80px;
             height: 80px;
             border-radius: 8px;
             border: 1px solid #eee;
-            cursor: pointer;
-        }
-
-        .edit-icon {
-            position: absolute;
-            bottom: -8px;
-            right: -8px;
-            background: white;
-            border-radius: 50%;
-            padding: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         .nickname {
             font-size: 18px;
             margin: 15px 0 8px;
-            cursor: pointer;
         }
 
         .info-item {
@@ -70,30 +89,8 @@
         }
 
         .signature-box {
-            position: relative;
             min-height: 44px;
             padding: 12px 20px;
-            cursor: pointer;
-        }
-
-        .signature-content {
-            display: inline-block;
-            max-width: 80%;
-            transition: transform 0.3s;
-        }
-
-        .signature-content.large {
-            transform: scale(1.5);
-            transform-origin: left center;
-        }
-
-        .signature-image {
-            max-width: 60px;
-            max-height: 60px;
-            vertical-align: middle;
-            margin-left: 8px;
-            border-radius: 4px;
-            cursor: zoom-in;
         }
 
         .add-button {
@@ -108,152 +105,69 @@
         }
 
         .modal {
-            /* 原有弹窗样式基础上增加层级 */
-            z-index: 1000;
-        }
-
-        .image-preview {
-            max-width: 200px;
-            max-height: 200px;
-            margin: 10px 0;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="profile-header">
-            <div class="avatar-edit">
-                <img src="https://via.placeholder.com/80x80" alt="头像" class="avatar" id="avatar">
-                <i class="fas fa-pencil-alt edit-icon" onclick="showAvatarEdit()"></i>
+        <div class="header">
+            <span class="back-button">&lt;</span>
+            <span class="menu-button" onclick="toggleMenu()">...</span>
+            <div class="menu-options" id="menuOptions">
+                <div onclick="showEditModal('avatar')">修改头像</div>
+                <div onclick="showEditModal('nickname')">修改昵称</div>
+                <div onclick="showEditModal('signature')">修改个性签名</div>
             </div>
-            <h2 class="nickname" id="nickname" onclick="showNicknameEdit()">Fairy</h2>
         </div>
-
+        <div class="profile-header">
+            <img src="https://via.placeholder.com/80x80" alt="头像" class="avatar" id="avatar">
+            <h2 class="nickname" id="nickname">Fairy</h2>
+        </div>
         <div class="info-item">
             <span class="info-label">来源</span>
             <span>来自扫一扫</span>
         </div>
-
-        <div class="signature-box" onclick="toggleSignature()">
+        <div class="signature-box">
             <span class="info-label">个性签名</span>
-            <div class="signature-content" id="signatureContent">
-                点击添加个性签名
-            </div>
+            <div id="signatureContent">点击添加个性签名</div>
         </div>
-
         <button class="add-button" onclick="alert('好友请求已发送')">添加到通讯录</button>
+    </div>
 
-        <!-- 编辑弹窗 -->
-        <div class="modal" id="editModal">
-            <div class="modal-content">
-                <h3 id="modalTitle">编辑内容</h3>
-                <div id="avatarEdit" style="display:none;">
-                    <input type="file" id="avatarInput" accept="image/*">
-                    <div id="avatarPreview" class="image-preview"></div>
-                </div>
-                <div id="nicknameEdit" style="display:none;">
-                    <input type="text" id="nicknameInput" style="width:100%;padding:8px;">
-                </div>
-                <div id="signatureEdit" style="display:none;">
-                    <textarea id="signatureInput" rows="3" style="width:100%"></textarea>
-                    <input type="file" id="imageInput" accept="image/*">
-                    <button onclick="saveEdit()">保存</button>
-                </div>
-            </div>
-        </div>
+    <!-- 编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <h3 id="modalTitle">编辑内容</h3>
+        <input type="text" id="editInput" style="width: 100%; padding: 8px;">
+        <button onclick="saveEdit()">保存</button>
     </div>
 
     <script>
-        // 初始化本地存储
-        let userInfo = JSON.parse(localStorage.getItem('userInfo')) || {
-            avatar: 'https://via.placeholder.com/80x80',
-            nickname: '0319',
-            signature: '点击添加个性签名',
-            signatureImages: []
-        };
-
-        // 初始化界面
-        function init() {
-            document.getElementById('avatar').src = userInfo.avatar;
-            document.getElementById('nickname').textContent = userInfo.nickname;
-            updateSignatureDisplay();
+        function toggleMenu() {
+            const menu = document.getElementById('menuOptions');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
 
-        // 更新签名显示
-        function updateSignatureDisplay() {
-            const container = document.getElementById('signatureContent');
-            container.innerHTML = userInfo.signature;
-            userInfo.signatureImages.forEach(img => {
-                const image = new Image();
-                image.src = img;
-                image.className = 'signature-image';
-                image.onclick = function(e) {
-                    e.stopPropagation();
-                    this.classList.toggle('large');
-                }
-                container.appendChild(image);
-            });
-        }
-
-        // 显示头像编辑
-        function showAvatarEdit() {
-            document.getElementById('modalTitle').textContent = '修改头像';
-            document.getElementById('avatarEdit').style.display = 'block';
+        function showEditModal(type) {
             document.getElementById('editModal').style.display = 'block';
-            
-            document.getElementById('avatarInput').onchange = function(e) {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = function() {
-                    userInfo.avatar = reader.result;
-                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
-                    document.getElementById('avatar').src = reader.result;
-                }
-                reader.readAsDataURL(file);
-            }
+            document.getElementById('modalTitle').textContent = '修改' + (type === 'avatar' ? '头像' : type === 'nickname' ? '昵称' : '个性签名');
+            document.getElementById('editInput').value = document.getElementById(type).textContent;
+            document.getElementById('editInput').setAttribute('data-type', type);
+            toggleMenu();
         }
 
-        // 显示昵称编辑
-        function showNicknameEdit() {
-            document.getElementById('modalTitle').textContent = '修改昵称';
-            document.getElementById('nicknameEdit').style.display = 'block';
-            document.getElementById('editModal').style.display = 'block';
-            document.getElementById('nicknameInput').value = userInfo.nickname;
-        }
-
-        // 保存编辑
         function saveEdit() {
-            if (document.getElementById('nicknameEdit').style.display === 'block') {
-                userInfo.nickname = document.getElementById('nicknameInput').value;
-                document.getElementById('nickname').textContent = userInfo.nickname;
-            }
-            
-            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            const type = document.getElementById('editInput').getAttribute('data-type');
+            document.getElementById(type).textContent = document.getElementById('editInput').value;
             document.getElementById('editModal').style.display = 'none';
-            resetModal();
-        }
-
-        // 切换签名大小
-        function toggleSignature() {
-            document.getElementById('signatureContent').classList.toggle('large');
-        }
-
-        // 重置弹窗
-        function resetModal() {
-            document.getElementById('avatarEdit').style.display = 'none';
-            document.getElementById('nicknameEdit').style.display = 'none';
-            document.getElementById('signatureEdit').style.display = 'none';
-        }
-
-        // 初始化
-        init();
-
-        // 关闭弹窗
-        window.onclick = function(e) {
-            if (e.target == document.getElementById('editModal')) {
-                document.getElementById('editModal').style.display = 'none';
-                resetModal();
-            }
         }
     </script>
 </body>
