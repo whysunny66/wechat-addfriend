@@ -90,6 +90,7 @@
             max-width: 16px; /* 设置为汉字大小 */
             height: auto;
             cursor: pointer;
+            transition: transform 0.3s ease;
         }
 
         .modal {
@@ -109,7 +110,6 @@
             max-width: 90%;
             max-height: 90%;
             cursor: pointer;
-            transition: transform 0.3s ease;
             position: absolute;
             touch-action: none;
         }
@@ -224,6 +224,9 @@
                 
                 // 隐藏上传链接到右上角
                 document.getElementById('menu').style.display = 'none';
+
+                // 隐藏上传文件和设置签名输入框
+                document.querySelector('.input-box').style.display = 'none';
             };
             reader.readAsDataURL(event.target.files[0]);
         }
