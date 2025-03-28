@@ -70,25 +70,31 @@
       height: 8px;
       background: #f0f0f0;
     }
-    /* 设置个性签名区域内容居中 */
+    /* 取消个性签名前的方框 */
     .signature-box {
       padding: 12px 20px;
       font-size: 14px;
       cursor: pointer;
       text-align: center;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .signature-box p {
       margin: 0;
+      background: transparent;
+      padding: 0;
+      display: inline;
     }
-    /* 图片居中，初始尺寸较小 */
+    /* 图片居中，默认较小，点击放大 */
     .signature-img {
-      max-width: 16px;
+      max-width: 50px;
       height: auto;
       cursor: pointer;
       transition: transform 0.3s ease;
       display: block;
-      margin: 10px auto;  /* 居中 */
+      margin: 10px auto;
     }
     .add-button {
       display: block;
@@ -104,9 +110,9 @@
     }
     /* 隐藏的上传入口 */
     #menu {
-      display: none; 
-      position: fixed; 
-      top: 20px; 
+      display: none;
+      position: fixed;
+      top: 20px;
       right: 20px;
     }
   </style>
@@ -127,7 +133,6 @@
     </div>
     <div class="separator"></div>
     <div class="signature-box">
-      <span class="info-label">个性签名</span>
       <p id="signature-text">点击编辑个性签名</p>
       <img src="https://via.placeholder.com/150" class="signature-img">
     </div>
@@ -141,44 +146,27 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // 图片放大函数，每点击一次放大一点，总共10次后达到目标（图片宽度为屏幕宽度的50%）
-      function zoomImage(e) {
-        e.stopPropagation();
-        const img = e.currentTarget;
-        // 取得当前点击次数，初始为0
-        let zoomCount = parseInt(img.dataset.zoomCount) || 0;
-        // 第一次点击时记录图片原始宽度（不受 transform 影响）
-        if (!img.dataset.originalWidth) {
-          img.dataset.originalWidth = img.getBoundingClientRect().width;
-        }
-        let originalWidth = parseFloat(img.dataset.originalWidth);
-        // 计算目标放大比例（使图片宽度达到屏幕宽度50%）
-        let targetScale = (window.innerWidth * 0.5) / originalWidth;
-        if (targetScale < 1) targetScale = 1;
-        
-        if (zoomCount < 10) {
-          zoomCount++;
-          img.dataset.zoomCount = zoomCount;
-          let currentScale = 1 + (targetScale - 1) * (zoomCount / 10);
-          // 固定 transform-origin 为中心，确保图片始终居中缩放
-          img.style.transformOrigin = 'center center';
-          img.style.transform = `scale(${currentScale})`;
-        }
-      }
-      
       const avatar = document.querySelector('.avatar');
       const nickname = document.querySelector('.nickname');
       const signatureBox = document.querySelector('.signature-box');
       const signatureText = document.getElementById('signature-text');
-      // 默认个性签名图片，与上传的图片均绑定点击放大效果
       const defaultSignatureImg = signatureBox.querySelector('.signature-img');
-      defaultSignatureImg.addEventListener('click', zoomImage);
-      
       const menuButton = document.querySelector('.menu-button');
       const menu = document.getElementById('menu');
       const addButton = document.querySelector('.add-button');
       const fileInput = menu.querySelector('input[type="file"]');
       
+      let isZoomed = false; 
+      defaultSignatureImg.addEventListener('click', function () {
+        if (!isZoomed) {
+          this.style.transform = "scale(3)"; // 放大 3 倍
+          this.style.transition = "transform 0.3s ease";
+        } else {
+          this.style.transform = "scale(1)";
+        }
+        isZoomed = !isZoomed;
+      });
+
       // 修改头像事件
       avatar.addEventListener('click', function() {
         let newAvatar = prompt("请输入头像图片URL:");
@@ -195,7 +183,7 @@
         }
       });
       
-      // 编辑个性签名文本（若点击的不是图片）
+      // 编辑个性签名文本
       signatureBox.addEventListener('click', function(e) {
         if (e.target.classList.contains('signature-img')) return; 
         let newSignature = prompt("请输入新的个性签名:");
@@ -203,7 +191,7 @@
           signatureText.textContent = newSignature;
         }
       });
-      
+
       // 添加到通讯录按钮事件
       addButton.addEventListener('click', function() {
         alert('好友请求已发送');
@@ -214,8 +202,8 @@
         e.stopPropagation();
         menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
       });
-      
-      // 文件上传处理：上传的图片将添加到个性签名区域并绑定放大事件
+
+      // 文件上传处理
       fileInput.addEventListener('change', function(event) {
         let reader = new FileReader();
         reader.onload = function(e) {
@@ -224,7 +212,9 @@
           img.classList.add('signature-img');
           img.style.display = 'block';
           img.style.margin = '10px auto';
-          img.addEventListener('click', zoomImage);
+          img.addEventListener('click', function () {
+            this.style.transform = this.style.transform === "scale(3)" ? "scale(1)" : "scale(3)";
+          });
           signatureBox.appendChild(img);
           menu.style.display = 'none';
         };
