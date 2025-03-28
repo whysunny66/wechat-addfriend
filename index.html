@@ -117,19 +117,7 @@
       border-top: 8px solid #f0f0f0;
       text-align: center;
     }
-    .input-box {
-      display: flex;
-      flex-direction: column;
-      margin-top: 10px;
-    }
-    .input-box input[type="file"] {
-      margin-bottom: 10px;
-    }
-    .input-box textarea {
-      margin-bottom: 10px;
-      resize: none;
-    }
-    /* 隐藏的菜单上传入口 */
+    /* 隐藏的上传图片入口 */
     #menu {
       display: none; 
       position: fixed; 
@@ -172,7 +160,7 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      let zoomCount = 0;   // 累计点击次数（最大10次）
+      let zoomCount = 0;   // 点击次数累计（最多10次）
       let targetScale = 1; // 在10次点击后达到的目标放大比例
       
       const avatar = document.querySelector('.avatar');
@@ -203,25 +191,12 @@
         }
       });
       
-      // 编辑个性签名（点击签名区域除图片外部分触发）
+      // 编辑个性签名（点击签名区域，除点击图片时不触发）
       signatureBox.addEventListener('click', function(e) {
         if (e.target.classList.contains('signature-img')) return;
         let newSignature = prompt("请输入新的个性签名:");
         if (newSignature) {
           signatureText.textContent = newSignature;
-        }
-        if (!signatureBox.querySelector('.input-box')) {
-          let inputBox = document.createElement('div');
-          inputBox.classList.add('input-box');
-          inputBox.innerHTML = `
-            <input type="file" accept="image/*">
-            <textarea id="signature-textarea" placeholder="在这里输入个性签名..."></textarea>
-          `;
-          signatureBox.appendChild(inputBox);
-          const localFileInput = inputBox.querySelector('input[type="file"]');
-          localFileInput.addEventListener('change', function(event) {
-            handleUploadImage(event, inputBox);
-          });
         }
       });
       
@@ -230,7 +205,7 @@
         alert('好友请求已发送');
       });
       
-      // 菜单按钮切换显示
+      // 菜单按钮切换显示上传入口
       menuButton.addEventListener('click', function(e) {
         e.stopPropagation();
         menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
@@ -241,13 +216,13 @@
         handleUploadImage(event, null);
       });
       
-      // 默认签名图片：点击打开模态框预览
+      // 默认签名图片点击：打开模态窗口预览图片
       defaultSignatureImg.addEventListener('click', function(e) {
         e.stopPropagation();
         openModal(this);
       });
       
-      // 处理上传图片
+      // 处理上传图片，文件读取后添加到个性签名区域
       function handleUploadImage(event, container) {
         let reader = new FileReader();
         reader.onload = function(e) {
@@ -273,29 +248,21 @@
         modalImg.src = imgElement.src;
         modalImg.style.transform = `scale(1)`;
         // 计算最大放大比例：目标为使图片宽度达到手机屏幕宽度的一半
-        // 注意：modalImg.clientWidth在图片已加载且显示后才能正确获取
         targetScale = (window.innerWidth * 0.5) / modalImg.clientWidth;
-        // 如果计算结果小于1，则保持1（不放大）
         if (targetScale < 1) targetScale = 1;
-        // 重置位置
         modalImg.style.left = '0px';
         modalImg.style.top = '0px';
-        // 清除任何之前的 transform-origin 设定
         modalImg.style.transformOrigin = "center center";
         modal.style.display = 'flex';
       }
       
-      // 模态图片点击事件处理：每点击一次，按照点击所在位置放大一点
+      // 模态图片点击事件：根据点击位置逐步放大（10次点击后放大达到目标尺寸）
       modalImg.addEventListener('click', function(e) {
-        // 阻止事件冒泡导致模态关闭
         e.stopPropagation();
-        // 设置放大中心为点击位置
         let rect = modalImg.getBoundingClientRect();
-        let clickX = e.clientX - rect.left;  // 点击相对于图片左边界
-        let clickY = e.clientY - rect.top;
+        let clickX = e.clientX - rect.left;  // 点击点相对于图片左边界
+        let clickY = e.clientY - rect.top;     // 点击点相对于图片上边界
         modalImg.style.transformOrigin = `${clickX}px ${clickY}px`;
-        
-        // 如果点击次数未达到10次，则逐步放大
         if (zoomCount < 10) {
           zoomCount++;
           let currentScale = 1 + (targetScale - 1) * (zoomCount / 10);
@@ -303,7 +270,7 @@
         }
       });
       
-      // 触摸拖动事件（保持不变）
+      // 触摸拖动相关（支持移动设备拖拽图片）
       let drag = false, offsetX, offsetY;
       modalImg.addEventListener('touchstart', function(e) {
         drag = true;
@@ -324,7 +291,7 @@
         drag = false;
       });
       
-      // 点击模态背景关闭预览，同时重置缩放参数
+      // 点击模态背景关闭预览，并重置状态
       modal.addEventListener('click', function() {
         modal.style.display = 'none';
         zoomCount = 0;
