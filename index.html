@@ -80,30 +80,12 @@
       margin: 0;
     }
     .signature-img {
-      max-width: 16px;
+      max-width: 16px; /* 初始尺寸较小 */
       height: auto;
       cursor: pointer;
       transition: transform 0.3s ease;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-    .modal img {
-      max-width: 90%;
-      max-height: 90%;
-      cursor: pointer;
-      position: absolute;
-      touch-action: none;
-      transition: transform 0.3s ease;
+      display: block;
+      margin-top: 10px;
     }
     .add-button {
       display: block;
@@ -149,34 +131,57 @@
     <button class="add-button">添加到通讯录</button>
   </div>
 
-  <div class="modal" id="modal">
-    <img id="modal-img" src="" alt="预览图片">
-  </div>
-
   <!-- 隐藏的上传图片入口 -->
   <div id="menu">
     <input type="file" accept="image/*">
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      let zoomCount = 0;   // 点击次数累计（最多10次）
-      let targetScale = 1; // 在10次点击后达到的目标放大比例
+    document.addEventListener('DOMContentLoaded', function() {
+      // 点击图片放大效果：每点击一次放大一点，累计10次后图片宽度达到屏幕宽度的一半
+      function zoomImage(e) {
+        e.stopPropagation();
+        const img = e.currentTarget;
+        // 获取当前的点击次数，初始为0
+        let zoomCount = parseInt(img.dataset.zoomCount) || 0;
+        // 初次点击时保存图片原始宽度（不受 transform 后影响）
+        if (!img.dataset.originalWidth) {
+          img.dataset.originalWidth = img.getBoundingClientRect().width;
+        }
+        let originalWidth = parseFloat(img.dataset.originalWidth);
+        // 计算目标比例：使图片宽度达到屏幕宽度的 50%
+        let targetScale = (window.innerWidth * 0.5) / originalWidth;
+        if (targetScale < 1) targetScale = 1;
+        
+        if (zoomCount < 10) {
+          zoomCount++;
+          img.dataset.zoomCount = zoomCount;
+          // 线性插值计算当前比例
+          let currentScale = 1 + (targetScale - 1) * (zoomCount / 10);
+          // 根据点击位置设置 transform origin，使放大以点击处为中心
+          let rect = img.getBoundingClientRect();
+          let clickX = e.clientX - rect.left;
+          let clickY = e.clientY - rect.top;
+          img.style.transformOrigin = `${clickX}px ${clickY}px`;
+          img.style.transform = `scale(${currentScale})`;
+        }
+      }
       
       const avatar = document.querySelector('.avatar');
       const nickname = document.querySelector('.nickname');
       const signatureBox = document.querySelector('.signature-box');
       const signatureText = document.getElementById('signature-text');
+      // 默认个性签名图片，并绑定点击放大事件
       const defaultSignatureImg = signatureBox.querySelector('.signature-img');
+      defaultSignatureImg.addEventListener('click', zoomImage);
+      
       const menuButton = document.querySelector('.menu-button');
       const menu = document.getElementById('menu');
       const addButton = document.querySelector('.add-button');
-      const modal = document.getElementById('modal');
-      const modalImg = document.getElementById('modal-img');
       const fileInput = menu.querySelector('input[type="file"]');
       
       // 修改头像
-      avatar.addEventListener('click', function () {
+      avatar.addEventListener('click', function() {
         let newAvatar = prompt("请输入头像图片URL:");
         if (newAvatar) {
           avatar.src = newAvatar;
@@ -184,15 +189,16 @@
       });
       
       // 编辑昵称
-      nickname.addEventListener('click', function () {
+      nickname.addEventListener('click', function() {
         let newName = prompt("请输入新的昵称:");
         if (newName) {
           nickname.textContent = newName;
         }
       });
       
-      // 编辑个性签名（点击签名区域，除点击图片时不触发）
+      // 编辑个性签名（仅编辑文本，不触发图片放大）
       signatureBox.addEventListener('click', function(e) {
+        // 如果点击的是图片，则不触发文本编辑
         if (e.target.classList.contains('signature-img')) return;
         let newSignature = prompt("请输入新的个性签名:");
         if (newSignature) {
@@ -205,96 +211,25 @@
         alert('好友请求已发送');
       });
       
-      // 菜单按钮切换显示上传入口
+      // 菜单按钮：切换显示上传入口
       menuButton.addEventListener('click', function(e) {
         e.stopPropagation();
         menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
       });
       
-      // 菜单中的文件上传
+      // 文件上传处理：上传的图片添加到个性签名区域，并绑定放大事件
       fileInput.addEventListener('change', function(event) {
-        handleUploadImage(event, null);
-      });
-      
-      // 默认签名图片点击：打开模态窗口预览图片
-      defaultSignatureImg.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openModal(this);
-      });
-      
-      // 处理上传图片，文件读取后添加到个性签名区域
-      function handleUploadImage(event, container) {
         let reader = new FileReader();
         reader.onload = function(e) {
           let img = document.createElement('img');
           img.src = e.target.result;
           img.classList.add('signature-img');
-          img.addEventListener('click', function(event) {
-            event.stopPropagation();
-            openModal(this);
-          });
+          // 若需要放大效果，绑定 zoomImage 事件
+          img.addEventListener('click', zoomImage);
           signatureBox.appendChild(img);
-          if (container) {
-            container.style.display = 'none';
-          }
           menu.style.display = 'none';
         };
         reader.readAsDataURL(event.target.files[0]);
-      }
-      
-      // 打开模态框预览图片，并初始化缩放参数
-      function openModal(imgElement) {
-        zoomCount = 0; // 重置点击次数
-        modalImg.src = imgElement.src;
-        modalImg.style.transform = `scale(1)`;
-        // 计算最大放大比例：目标为使图片宽度达到手机屏幕宽度的一半
-        targetScale = (window.innerWidth * 0.5) / modalImg.clientWidth;
-        if (targetScale < 1) targetScale = 1;
-        modalImg.style.left = '0px';
-        modalImg.style.top = '0px';
-        modalImg.style.transformOrigin = "center center";
-        modal.style.display = 'flex';
-      }
-      
-      // 模态图片点击事件：根据点击位置逐步放大（10次点击后放大达到目标尺寸）
-      modalImg.addEventListener('click', function(e) {
-        e.stopPropagation();
-        let rect = modalImg.getBoundingClientRect();
-        let clickX = e.clientX - rect.left;  // 点击点相对于图片左边界
-        let clickY = e.clientY - rect.top;     // 点击点相对于图片上边界
-        modalImg.style.transformOrigin = `${clickX}px ${clickY}px`;
-        if (zoomCount < 10) {
-          zoomCount++;
-          let currentScale = 1 + (targetScale - 1) * (zoomCount / 10);
-          modalImg.style.transform = `scale(${currentScale})`;
-        }
-      });
-      
-      // 触摸拖动相关（支持移动设备拖拽图片）
-      let drag = false, offsetX, offsetY;
-      modalImg.addEventListener('touchstart', function(e) {
-        drag = true;
-        offsetX = e.touches[0].clientX - modalImg.offsetLeft;
-        offsetY = e.touches[0].clientY - modalImg.offsetTop;
-      });
-      
-      modalImg.addEventListener('touchmove', function(e) {
-        if (drag) {
-          let x = e.touches[0].clientX - offsetX;
-          let y = e.touches[0].clientY - offsetY;
-          modalImg.style.left = `${x}px`;
-          modalImg.style.top = `${y}px`;
-        }
-      });
-      
-      modalImg.addEventListener('touchend', function() {
-        drag = false;
-      });
-      
-      // 点击模态背景关闭预览，并重置状态
-      modal.addEventListener('click', function() {
-        modal.style.display = 'none';
-        zoomCount = 0;
       });
     });
   </script>
