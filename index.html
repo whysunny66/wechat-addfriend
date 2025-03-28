@@ -103,6 +103,7 @@
       cursor: pointer;
       position: absolute;
       touch-action: none;
+      transition: transform 0.3s ease;
     }
     .add-button {
       display: block;
@@ -171,15 +172,13 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      let scale = 1;
-      let drag = false;
-      let offsetX, offsetY;
+      let zoomCount = 0;   // 累计点击次数（最大10次）
+      let targetScale = 1; // 在10次点击后达到的目标放大比例
       
       const avatar = document.querySelector('.avatar');
       const nickname = document.querySelector('.nickname');
       const signatureBox = document.querySelector('.signature-box');
       const signatureText = document.getElementById('signature-text');
-      // 默认签名图（入口图片）
       const defaultSignatureImg = signatureBox.querySelector('.signature-img');
       const menuButton = document.querySelector('.menu-button');
       const menu = document.getElementById('menu');
@@ -204,16 +203,13 @@
         }
       });
       
-      // 编辑个性签名（点击签名文本部分触发）
+      // 编辑个性签名（点击签名区域除图片外部分触发）
       signatureBox.addEventListener('click', function(e) {
-        // 如果点击的是图片，则不触发签名编辑
         if (e.target.classList.contains('signature-img')) return;
-        
         let newSignature = prompt("请输入新的个性签名:");
         if (newSignature) {
           signatureText.textContent = newSignature;
         }
-        // 添加上传区域（仅添加一次）
         if (!signatureBox.querySelector('.input-box')) {
           let inputBox = document.createElement('div');
           inputBox.classList.add('input-box');
@@ -251,14 +247,13 @@
         openModal(this);
       });
       
-      // 上传图片处理
+      // 处理上传图片
       function handleUploadImage(event, container) {
         let reader = new FileReader();
         reader.onload = function(e) {
           let img = document.createElement('img');
           img.src = e.target.result;
           img.classList.add('signature-img');
-          // 点击上传的图片同样打开模态框预览
           img.addEventListener('click', function(event) {
             event.stopPropagation();
             openModal(this);
@@ -272,57 +267,67 @@
         reader.readAsDataURL(event.target.files[0]);
       }
       
-      // 打开模态框预览图片，重置缩放以及位置
+      // 打开模态框预览图片，并初始化缩放参数
       function openModal(imgElement) {
-        scale = 1;
+        zoomCount = 0; // 重置点击次数
         modalImg.src = imgElement.src;
-        modalImg.style.transform = `scale(${scale})`;
+        modalImg.style.transform = `scale(1)`;
+        // 计算最大放大比例：目标为使图片宽度达到手机屏幕宽度的一半
+        // 注意：modalImg.clientWidth在图片已加载且显示后才能正确获取
+        targetScale = (window.innerWidth * 0.5) / modalImg.clientWidth;
+        // 如果计算结果小于1，则保持1（不放大）
+        if (targetScale < 1) targetScale = 1;
+        // 重置位置
         modalImg.style.left = '0px';
         modalImg.style.top = '0px';
+        // 清除任何之前的 transform-origin 设定
+        modalImg.style.transformOrigin = "center center";
         modal.style.display = 'flex';
       }
       
-      // 模态图片点击放大处理（防止冒泡关闭模态）
-      function onModalImgClick(e) {
+      // 模态图片点击事件处理：每点击一次，按照点击所在位置放大一点
+      modalImg.addEventListener('click', function(e) {
+        // 阻止事件冒泡导致模态关闭
         e.stopPropagation();
-        scale += 0.1;
-        modalImg.style.transform = `scale(${scale})`;
-        if (scale > 3) {
-          scale = 1;
-          modalImg.style.transform = `scale(${scale})`;
+        // 设置放大中心为点击位置
+        let rect = modalImg.getBoundingClientRect();
+        let clickX = e.clientX - rect.left;  // 点击相对于图片左边界
+        let clickY = e.clientY - rect.top;
+        modalImg.style.transformOrigin = `${clickX}px ${clickY}px`;
+        
+        // 如果点击次数未达到10次，则逐步放大
+        if (zoomCount < 10) {
+          zoomCount++;
+          let currentScale = 1 + (targetScale - 1) * (zoomCount / 10);
+          modalImg.style.transform = `scale(${currentScale})`;
         }
-      }
+      });
       
-      // 触摸拖动
-      function onTouchStart(e) {
+      // 触摸拖动事件（保持不变）
+      let drag = false, offsetX, offsetY;
+      modalImg.addEventListener('touchstart', function(e) {
         drag = true;
         offsetX = e.touches[0].clientX - modalImg.offsetLeft;
         offsetY = e.touches[0].clientY - modalImg.offsetTop;
-      }
+      });
       
-      function onTouchMove(e) {
+      modalImg.addEventListener('touchmove', function(e) {
         if (drag) {
           let x = e.touches[0].clientX - offsetX;
           let y = e.touches[0].clientY - offsetY;
           modalImg.style.left = `${x}px`;
           modalImg.style.top = `${y}px`;
         }
-      }
+      });
       
-      function onTouchEnd(e) {
+      modalImg.addEventListener('touchend', function() {
         drag = false;
-      }
+      });
       
-      // 模态框相关事件只绑定一次
-      modalImg.addEventListener('click', onModalImgClick);
-      modalImg.addEventListener('touchstart', onTouchStart);
-      modalImg.addEventListener('touchmove', onTouchMove);
-      modalImg.addEventListener('touchend', onTouchEnd);
-      
-      // 点击模态背景关闭预览，重置状态
+      // 点击模态背景关闭预览，同时重置缩放参数
       modal.addEventListener('click', function() {
         modal.style.display = 'none';
-        scale = 1;
+        zoomCount = 0;
       });
     });
   </script>
